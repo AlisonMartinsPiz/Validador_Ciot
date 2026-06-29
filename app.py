@@ -15,6 +15,19 @@ st.set_page_config(
     layout="wide"
 )
 
+# Esconde elementos padrão do Streamlit
+st.markdown("""
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        [data-testid="stToolbar"] {visibility: hidden;}
+        [data-testid="manage-app-button"] {display: none;}
+        .viewerBadge_container__r5tak {display: none;}
+        .viewerBadge_link__qRIco {display: none;}
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("📦 CIOT — Validador de Coordenadas")
 st.markdown("Faça o upload do arquivo XML para validar as coordenadas dos CT-es.")
 
