@@ -1,6 +1,7 @@
 import io
 import xml.etree.ElementTree as ET
 import streamlit as st
+import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
@@ -11,7 +12,7 @@ from openpyxl.utils import get_column_letter
 st.set_page_config(
     page_title="CIOT - Validador de Coordenadas",
     page_icon="📦",
-    layout="centered"
+    layout="wide"
 )
 
 st.title("📦 CIOT — Validador de Coordenadas")
@@ -44,6 +45,7 @@ except ET.ParseError:
 # Processa os CT-es
 # ============================================
 ctes_com_erro = []
+linhas_tabela = []
 todas_viagens = root.findall(".//adic:Viagens", ns)
 total = len(todas_viagens)
 
@@ -63,7 +65,6 @@ with st.spinner("Processando CT-es..."):
     ]
     ws.append(cabecalho)
 
-    # Estilo do cabeçalho
     azul = PatternFill(fill_type="solid", fgColor="1F4E78")
     for cell in ws[1]:
         cell.font = Font(bold=True, color="FFFFFF")
@@ -110,10 +111,19 @@ with st.spinner("Processando CT-es..."):
                 erros.append("Longitude do Destinatário Ausente")
 
         if erros:
-            ws.append([cte, lat_ori, lon_ori, lat_dest, lon_dest, ", ".join(erros)])
+            descricao_erro = ", ".join(erros)
+            ws.append([cte, lat_ori, lon_ori, lat_dest, lon_dest, descricao_erro])
             ctes_com_erro.append(cte)
+            linhas_tabela.append({
+                "CT-e": cte,
+                "Latitude Origem": lat_ori if lat_ori.strip() else "—",
+                "Longitude Origem": lon_ori if lon_ori.strip() else "—",
+                "Latitude Destino": lat_dest if lat_dest.strip() else "—",
+                "Longitude Destino": lon_dest if lon_dest.strip() else "—",
+                "Problema": descricao_erro
+            })
 
-    # Centraliza todas as células
+    # Centraliza células
     for linha in ws.iter_rows():
         for celula in linha:
             celula.alignment = Alignment(horizontal="center", vertical="center")
@@ -134,7 +144,7 @@ with st.spinner("Processando CT-es..."):
     celula_kmm.fill = PatternFill(fill_type="solid", fgColor="FFF200")
     celula_kmm.alignment = Alignment(horizontal="center")
 
-    # Ajusta largura das colunas
+    # Largura das colunas
     for coluna in ws.columns:
         maior = 0
         letra = get_column_letter(coluna[0].column)
@@ -148,11 +158,9 @@ with st.spinner("Processando CT-es..."):
         min(len(lista_ctes) * 0.9, 120)
     )
 
-    # Filtro automático
     ultima_linha_tabela = len(ctes_com_erro) + 1
     ws.auto_filter.ref = f"A1:F{ultima_linha_tabela}"
 
-    # Salva em memória (sem precisar de disco)
     buffer = io.BytesIO()
     wb.save(buffer)
     buffer.seek(0)
@@ -169,18 +177,37 @@ if ctes_com_erro:
 
     st.error(f"⚠️ {len(ctes_com_erro)} CT-e(s) com coordenadas ausentes encontrados.")
 
-    nome_saida = arquivo.name.replace(".xml", "_Validacao_Coordenadas.xlsx")
+    # Tabela visual na tela
+    st.subheader("📋 CT-es com problema")
+    df = pd.DataFrame(linhas_tabela)
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "CT-e": st.column_config.TextColumn("CT-e", width="small"),
+            "Latitude Origem": st.column_config.TextColumn("Lat. Origem"),
+            "Longitude Origem": st.column_config.TextColumn("Long. Origem"),
+            "Latitude Destino": st.column_config.TextColumn("Lat. Destino"),
+            "Longitude Destino": st.column_config.TextColumn("Long. Destino"),
+            "Problema": st.column_config.TextColumn("Problema", width="large"),
+        }
+    )
 
+    # KMM
+    st.subheader("🔗 Lista para o KMM")
+    st.code(lista_ctes, language=None)
+    st.caption("Copie e cole diretamente no KMM.")
+
+    # Download Excel
+    st.divider()
+    nome_saida = arquivo.name.replace(".xml", "_Validacao_Coordenadas.xlsx")
     st.download_button(
         label="⬇️ Baixar Excel com resultado",
         data=buffer,
         file_name=nome_saida,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
-    with st.expander("📋 Lista de CT-es para o KMM"):
-        st.code(lista_ctes, language=None)
-        st.caption("Copie e cole diretamente no KMM.")
 
 else:
     st.metric("CT-es analisados", total)
