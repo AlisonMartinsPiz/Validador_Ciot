@@ -19,12 +19,25 @@ st.set_page_config(
 st.markdown("""
     <style>
         #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
+        footer {visibility: hidden !important;}
         header {visibility: hidden;}
         [data-testid="stToolbar"] {visibility: hidden;}
-        [data-testid="manage-app-button"] {display: none;}
-        .viewerBadge_container__r5tak {display: none;}
-        .viewerBadge_link__qRIco {display: none;}
+        [data-testid="manage-app-button"] {display: none !important;}
+        .viewerBadge_container__r5tak {display: none !important;}
+        .viewerBadge_link__qRIco {display: none !important;}
+        [data-testid="stAppDeployButton"] {display: none !important;}
+        .stDeployButton {display: none !important;}
+        #stDecoration {display: none !important;}
+        a[href*="streamlit.io"] {display: none !important;}
+        iframe[title="streamlit_analytics"] {display: none !important;}
+        div[class*="badge"] {display: none !important;}
+        div[class*="Badge"] {display: none !important;}
+        section[data-testid="stSidebar"] div[class*="badge"] {display: none !important;}
+        .css-1dp5vir {display: none !important;}
+        .css-14xtw13 {display: none !important;}
+        ._profileContainer_pgrmq_53 {display: none !important;}
+        ._profilePreview_pgrmq_63 {display: none !important;}
+        ._link_pgrmq_82 {display: none !important;}
     </style>
 """, unsafe_allow_html=True)
 
