@@ -61,10 +61,18 @@ ns = {
 }
 
 try:
-    tree = ET.parse(arquivo)
-    root = tree.getroot()
-except ET.ParseError:
-    st.error("❌ Erro ao ler o XML. Verifique se o arquivo está correto.")
+    raw = arquivo.read()
+    # Tenta corrigir encoding quando o arquivo não declara UTF-8 corretamente
+    try:
+        raw_str = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        raw_str = raw.decode("latin-1")
+    # Remove declaração XML conflitante se houver, para forçar parse correto
+    root = ET.fromstring(raw_str)
+    tree = ET.ElementTree(root)
+except ET.ParseError as e:
+    st.error(f"❌ Erro ao ler o XML: {e}")
+    st.error("Verifique se o arquivo está íntegro e tente novamente.")
     st.stop()
 
 # ============================================
